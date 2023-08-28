@@ -1,4 +1,3 @@
-// Create a model class for image entity
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -27,12 +26,9 @@ namespace ArtWebsiteDataAccess.Models
         [Column(TypeName = "date")]
         public DateTime Date { get; set; }
 
-        [Column(TypeName = "int[]")]
-        public List<int> Related { get; set; } = new List<int>();
-
         [Required]
-        [Column(TypeName = "varchar[]")]
-        public List<string> Tags { get; set; } = new List<string>();
+        [MaxLength(255)]
+        public string Tags { get; set; } = "";
 
         [MaxLength(2083)]
         public string Url { get; set; } = "";

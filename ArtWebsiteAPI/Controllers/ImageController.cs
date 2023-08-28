@@ -2,6 +2,7 @@ using Azure.Storage.Blobs;
 using Microsoft.AspNetCore.Mvc;
 using ArtWebsiteDataAccess.Models;
 using ArtWebsiteDataAccess;
+using Microsoft.Data.SqlClient;
 
 namespace ArtWebsiteAPI.Controllers;
 [Route("api/[controller]")]
@@ -44,26 +45,24 @@ public class ImageController : Controller
             logger.LogDebug("Getting reference to container");
             var container = blobServiceClient.GetBlobContainerClient("apiimages");
             await container.CreateIfNotExistsAsync();
-            await container.SetAccessPolicyAsync(Azure.Storage.Blobs.Models.PublicAccessType.Blob);
 
-            // Get a reference to a new blob with a unique name using the blob service client
-            var blob = container.GetBlobClient(Guid.NewGuid().ToString() + Path.GetExtension(image.Title));
-
-            logger.LogDebug("Uploading image file {FileName} to container {BlobContainerName}", file.FileName, blob.BlobContainerName);
+            var blobname = Guid.NewGuid().ToString() + file.Name;
 
             // Upload the file stream to the blob
             using (var stream = file.OpenReadStream())
             {
-                await blob.UploadAsync(stream);
+                var response = await container.UploadBlobAsync(blobname, stream);
+                logger.LogInformation("Blob {blobname} uploaded successfully with {response}", blobname, response);
             }
+
             logger.LogDebug("Getting image URL from the blob container");
             // Set the URL property of the image parameter to the blob URL
+            var blob = container.GetBlobClient(blobname);
             image.Url = blob.Uri.ToString();
             logger.LogDebug("Got image URL {Url}", image.Url);
 
             // Save the image entity to the database using the DbContext class
 
-            logger.LogDebug("Saving image entity via dbContext");
             dbContext.Images.Add(image);
             await dbContext.SaveChangesAsync();
             logger.LogInformation("Image uploaded successfully with ID {Id}", image.Id);
@@ -71,9 +70,14 @@ public class ImageController : Controller
             // Return the image entity as a response
             return Ok(image);
         }
+        catch (Azure.RequestFailedException ex)
+        {
+            // Log or display the error details
+            logger.LogError(ex, "Blob client creation failed: {ErrorCode} {Message} {Status}", ex.ErrorCode, ex.Message, ex.Status);
+            return StatusCode(500, ex.Message);
+        }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Image upload failed: {Message} {StackTrace}", ex.Message, ex.StackTrace);
             // Handle any errors that may occur
             return StatusCode(500, ex.Message);
         }
