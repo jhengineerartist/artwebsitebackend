@@ -4,6 +4,7 @@ obj/
 
 # Ignore the .vscode folder that contains the settings and configuration files for VS Code
 .vscode/
+.env
 
 # Ignore the launchSettings.json file that contains the launch settings for debugging
 Properties/launchSettings.json

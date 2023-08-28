@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace artwebsitebackend.Controllers;
+namespace ArtWebsiteAPI.Controllers;
 
 [ApiController]
 [Route("[controller]")]

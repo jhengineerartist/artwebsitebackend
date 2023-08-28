@@ -1,4 +1,4 @@
-namespace artwebsitebackend;
+namespace ArtWebsiteAPI;
 
 public class WeatherForecast
 {
