@@ -23,9 +23,6 @@ ENV ASPNETCORE_ENVIRONMENT Development
 # Set the working directory
 WORKDIR /app
 
-# Copy the .env files so they can be referenced by the projects in the app directory
-COPY ./ArtWebsiteAPI/.env /app/.env
-
 # Copy the output files from the build image
 COPY --from=build /app/out .
 

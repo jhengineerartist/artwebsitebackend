@@ -6,6 +6,8 @@ using Azure.Identity;
 using Azure.Storage.Blobs;
 using Microsoft.Data.SqlClient;
 
+using Microsoft.AspNetCore.Hosting;
+
 DotNetEnv.Env.Load();
 
 // Create a WebApplicationBuilder instance
@@ -32,10 +34,35 @@ var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING"
 
 var connection = new SqlConnection(connectionString);
 
-
 builder.Services.AddSingleton(credential);
 builder.Services.AddSingleton(blobServiceClient);
 builder.Services.AddSingleton(connection);
+
+// Add CORS services
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: "PrimaryCors",
+        corsBuilder =>
+        {
+            // Set the origins based on the environment
+            if (builder.Environment.IsDevelopment())
+            {
+                // Allow any origin in development
+                Console.WriteLine("Allowing Any Origin.");
+                corsBuilder.AllowAnyOrigin();
+            }
+            else
+            {
+                // Allow only jhirshman.art in production
+                Console.WriteLine("Allowing only the production origin.");
+                corsBuilder.WithOrigins("https://jhirshman.art");
+            }
+
+            // Allow any header and method
+            corsBuilder.AllowAnyHeader()
+                    .AllowAnyMethod();
+        });
+});
 
 // Add the ImageDbContext class as a service 
 builder.Services.AddDbContext<ImageDbContext>(options =>
@@ -47,12 +74,19 @@ builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
+if (app.Environment.IsDevelopment())
+{
+    Log.Information($"Running In Development Evironment");
+}
+
+// Use CORS middleware with the policy name
+app.UseCors("PrimaryCors");
+
 Log.Information($"Connection {connection.Database} connected successfully.");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    Log.Information($"Running In Development Evironment");
     app.UseSwagger();
     app.UseSwaggerUI();
 }
