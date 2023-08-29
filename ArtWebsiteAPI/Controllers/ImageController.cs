@@ -46,7 +46,7 @@ public class ImageController : Controller
             var container = blobServiceClient.GetBlobContainerClient("apiimages");
             await container.CreateIfNotExistsAsync();
 
-            var blobname = Guid.NewGuid().ToString() + file.Name;
+            var blobname = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName); ;
 
             // Upload the file stream to the blob
             using (var stream = file.OpenReadStream())
@@ -78,6 +78,7 @@ public class ImageController : Controller
         }
         catch (Exception ex)
         {
+            logger.LogError(ex, "Image upload failure: {ErrorCode} {Message} {Status}", ex.Message);
             // Handle any errors that may occur
             return StatusCode(500, ex.Message);
         }

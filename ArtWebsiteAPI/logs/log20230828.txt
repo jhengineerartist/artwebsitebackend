@@ -1,0 +1,39 @@
+2023-08-28 19:44:20.764 -07:00 [INF] Connection closed
+2023-08-28 19:55:15.709 -07:00 [INF] Connection closed
+2023-08-28 19:58:04.500 -07:00 [INF] Connection closed
+2023-08-28 19:59:14.074 -07:00 [INF] Connection closed
+2023-08-28 19:59:14.877 -07:00 [INF] Executed DbCommand (104ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2023-08-28 19:59:14.992 -07:00 [INF] Executed DbCommand (101ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT OBJECT_ID(N'[__EFMigrationsHistory]');
+2023-08-28 19:59:15.089 -07:00 [INF] Executed DbCommand (94ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2023-08-28 19:59:15.343 -07:00 [INF] Executed DbCommand (169ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [__EFMigrationsHistory] (
+    [MigrationId] nvarchar(150) NOT NULL,
+    [ProductVersion] nvarchar(32) NOT NULL,
+    CONSTRAINT [PK___EFMigrationsHistory] PRIMARY KEY ([MigrationId])
+);
+2023-08-28 19:59:15.430 -07:00 [INF] Executed DbCommand (84ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2023-08-28 19:59:15.517 -07:00 [INF] Executed DbCommand (83ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT OBJECT_ID(N'[__EFMigrationsHistory]');
+2023-08-28 19:59:15.635 -07:00 [INF] Executed DbCommand (113ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [MigrationId], [ProductVersion]
+FROM [__EFMigrationsHistory]
+ORDER BY [MigrationId];
+2023-08-28 19:59:15.652 -07:00 [INF] Applying migration '20230829025805_InitialCreate'.
+2023-08-28 19:59:15.842 -07:00 [INF] Executed DbCommand (85ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [Images] (
+    [Id] int NOT NULL IDENTITY,
+    [Title] nvarchar(255) NOT NULL,
+    [Caption] nvarchar(1000) NOT NULL,
+    [Class] nvarchar(255) NOT NULL,
+    [Date] date NOT NULL,
+    [Tags] nvarchar(255) NOT NULL,
+    [Url] nvarchar(2083) NOT NULL,
+    CONSTRAINT [PK_Images] PRIMARY KEY ([Id])
+);
+2023-08-28 19:59:15.932 -07:00 [INF] Executed DbCommand (84ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20230829025805_InitialCreate', N'7.0.10');
