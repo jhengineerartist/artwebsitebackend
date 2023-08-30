@@ -1,17 +1,18 @@
-using ArtWebsiteAPI;
-using Serilog;
 using ArtWebsiteDataAccess;
-using Microsoft.EntityFrameworkCore;
 using Azure.Identity;
 using Azure.Storage.Blobs;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.SqlClient;
-
-using Microsoft.AspNetCore.Hosting;
+using Microsoft.Identity.Web;
+using Serilog;
+using Serilog.Events;
 
 DotNetEnv.Env.Load();
 
 // Create a WebApplicationBuilder instance
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Configuration.AddJsonFile("appsettings.json");
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -19,8 +20,21 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-InitializationUtils.ConfigureSerilog(builder);
+builder.Services.AddMicrosoftIdentityWebApiAuthentication(builder.Configuration);
 
+// Configure Serilog using the logging builder
+builder.Logging.Services.AddSerilog((context, configuration) =>
+{
+    // Configure Serilog using the context and configuration parameters
+    configuration
+        .MinimumLevel.Debug()
+        .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+        .Enrich.FromLogContext()
+        .WriteTo.Console(LogEventLevel.Information, "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
+        .WriteTo.File("logs/log.txt", LogEventLevel.Debug, rollingInterval: RollingInterval.Day);
+});
+
+// Configure the blob storage credential
 var credential = new ClientSecretCredential(
     Environment.GetEnvironmentVariable("ENTRA_APP_TENANT_ID"),
     Environment.GetEnvironmentVariable("ENTRA_APP_ID"),
@@ -74,11 +88,6 @@ builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    Log.Information($"Running In Development Evironment");
-}
-
 // Use CORS middleware with the policy name
 app.UseCors("PrimaryCors");
 
@@ -86,13 +95,21 @@ Log.Information($"Connection {connection.Database} connected successfully.");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
+
 {
+    Log.Information($"Running In Development Evironment");
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
+else
+{
+    Log.Information($"Running In Production Evironment");
+    app.UseExceptionHandler("/Error");
+    // Enable HTTPS redirection and HSTS middleware
+    app.UseHsts();
+}
 app.UseHttpsRedirection();
-
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

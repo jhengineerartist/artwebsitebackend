@@ -3,8 +3,13 @@ using Microsoft.AspNetCore.Mvc;
 using ArtWebsiteDataAccess.Models;
 using ArtWebsiteDataAccess;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
+using Polly;
+using Polly.Retry;
 
 namespace ArtWebsiteAPI.Controllers;
+
+[RequireHttps]
 [Route("api/[controller]")]
 [ApiController]
 public class ImageController : Controller
@@ -12,6 +17,12 @@ public class ImageController : Controller
     private readonly ILogger<ImageController> logger;
     private readonly BlobServiceClient blobServiceClient; // The blob service client instance
     private readonly ImageDbContext dbContext; // The DbContext instance
+
+    private readonly AsyncRetryPolicy retryPolicy = Policy
+    .Handle<Exception>()
+    .WaitAndRetryAsync(4, // Retry 4 times
+        retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)) // Use exponential backoff
+    );
 
     public ImageController(ILogger<ImageController> logger, ImageDbContext dbContext, BlobServiceClient blobServiceClient)
     {
@@ -31,6 +42,7 @@ public class ImageController : Controller
         return Ok(images);
     }
 
+    [Authorize(Roles = "ImageUpload")]
     [HttpDelete]
     public async Task<IActionResult> Delete(int id)
     {
@@ -56,8 +68,12 @@ public class ImageController : Controller
             logger.LogInformation("Blob {blobname} deleted successfully with {response}", blobname, response);
 
             // Delete the image entity from the database using the DbContext class
-            dbContext.Images.Remove(image);
-            await dbContext.SaveChangesAsync();
+            // Execute the database operation using the retry policy
+            await retryPolicy.ExecuteAsync(async () =>
+            {
+                dbContext.Images.Add(image);
+                await dbContext.SaveChangesAsync();
+            });
             logger.LogInformation("Image deleted successfully with ID {Id}", image.Id);
 
             return Ok($"Image with ID {id} deleted successfully");
@@ -77,7 +93,7 @@ public class ImageController : Controller
 
     }
 
-    // POST api/image
+    [Authorize(Roles = "ImageUpload")]
     [HttpPost]
     public async Task<IActionResult> Post([FromForm] IFormFile file, [FromForm] Image image)
     {

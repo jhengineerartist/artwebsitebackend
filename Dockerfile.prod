@@ -1,5 +1,5 @@
 # Use the official .NET 7 SDK image as the base image
-FROM mcr.microsoft.com/dotnet/sdk:7.0-alpine AS build
+FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 
 # Set the working directory
 WORKDIR /app
@@ -31,8 +31,11 @@ WORKDIR /app
 # Copy the output files from the build image
 COPY --from=build /app/out .
 
-# Expose port 80 for HTTP traffic
-EXPOSE 80
+# Copy the https cert file
+COPY httpcert.pfx /https/
+
+# Expose port 80 for HTTP traffic and port 443 for HTTPS traffic
+EXPOSE 80 443
 
 # Run the web API when the container starts
 ENTRYPOINT ["dotnet", "ArtWebsiteAPI.dll"]

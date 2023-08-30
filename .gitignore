@@ -12,4 +12,5 @@ Properties/launchSettings.json
 # Ignore any user secrets that are stored in a JSON file
 secrets.json
 
-
+# Ignore https cert files
+*.pfx
